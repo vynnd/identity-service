@@ -6,7 +6,6 @@ import com.dev.identity_service.entity.User;
 import com.dev.identity_service.repository.UserReponsitory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
@@ -17,6 +16,9 @@ public class UserService {
 
     public User createUser(UserCreationRequest request){
         User user = new User();
+
+        if(userReponsitory.existsByUserName(request.getUserName()))
+            throw new RuntimeException("User existed");
 
         user.setUserName(request.getUserName());
         user.setPassword(request.getPassword());
