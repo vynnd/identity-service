@@ -2,56 +2,52 @@ package com.dev.identity_service.service;
 
 import com.dev.identity_service.dto.request.UserCreationRequest;
 import com.dev.identity_service.dto.request.UserUpdateRequest;
+import com.dev.identity_service.dto.response.UserResponse;
 import com.dev.identity_service.entity.User;
 import com.dev.identity_service.exception.AppException;
 import com.dev.identity_service.exception.ErrorCode;
+import com.dev.identity_service.mapper.UserMapper;
 import com.dev.identity_service.repository.UserReponsitory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
 
-    @Autowired
     UserReponsitory userReponsitory;
+    UserMapper userMapper;
 
-    public User createUser(UserCreationRequest request){
-        User user = new User();
+    public UserResponse createUser(UserCreationRequest request){
 
         if(userReponsitory.existsByUserName(request.getUserName()))
             throw new AppException(ErrorCode.USER_EXISTED);
-
-        user.setUserName(request.getUserName());
-        user.setPassword(request.getPassword());
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setDob(request.getDob());
-
-        return userReponsitory.save(user);
+        User user = userMapper.toUser(request);
+        return userMapper.toUserResponse(userReponsitory.save(user));
     }
 
-    public User updateUser(String id, UserUpdateRequest request){
-        User user = getUser(id);
+    public UserResponse updateUser(String id, UserUpdateRequest request){
 
-        user.setPassword(request.getPassword());
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setDob(request.getDob());
-
-        return userReponsitory.save(user);
+        User user = userReponsitory.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        userMapper.updateUser(user, request);
+        return userMapper.toUserResponse(userReponsitory.save(user));
     }
 
     public void deleteUser(String userId){
         userReponsitory.deleteById(userId);
     }
 
-    public List<User> getUser(){
-        return userReponsitory.findAll();
+    public List<UserResponse> getUser(){
+        return userMapper.toListUserResponse(userReponsitory.findAll());
     }
 
-    public User getUser(String id){
-        return userReponsitory.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public UserResponse getUser(String id){
+        return userMapper.toUserResponse(userReponsitory.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)));
     }
 }
