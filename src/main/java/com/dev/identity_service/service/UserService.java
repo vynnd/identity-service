@@ -11,6 +11,8 @@ import com.dev.identity_service.repository.UserReponsitory;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -27,6 +29,9 @@ public class UserService {
         if(userReponsitory.existsByUserName(request.getUserName()))
             throw new AppException(ErrorCode.USER_EXISTED);
         User user = userMapper.toUser(request);
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
         return userMapper.toUserResponse(userReponsitory.save(user));
     }
 
