@@ -4,7 +4,6 @@ import com.dev.identity_service.dto.request.UserCreationRequest;
 import com.dev.identity_service.dto.request.UserUpdateRequest;
 import com.dev.identity_service.dto.response.ApiResponse;
 import com.dev.identity_service.dto.response.UserResponse;
-import com.dev.identity_service.entity.User;
 import com.dev.identity_service.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -23,31 +22,39 @@ public class UserController {
 
     @PostMapping
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request){
-        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(userService.createUser(request));
 
-        return apiResponse;
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.createUser(request))
+                .build();
     }
 
     @GetMapping
-    List<UserResponse> getUsers(){
-        return userService.getUser();
+    ApiResponse<List<UserResponse>> getUsers(){
+        return ApiResponse.<List<UserResponse>>builder()
+                .result(userService.getUser())
+                .build();
     }
 
     @GetMapping("/{userId}")
-    UserResponse getUser(@PathVariable("userId") String userId){
-        return userService.getUser(userId);
+    ApiResponse<UserResponse> getUser(@PathVariable("userId") String userId){
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.getUser(userId))
+                .build();
     }
 
     @PutMapping("/{userId}")
-    UserResponse updateUser(@RequestBody UserUpdateRequest userUpdateRequest,
+    ApiResponse<UserResponse> updateUser(@RequestBody UserUpdateRequest userUpdateRequest,
                     @PathVariable("userId") String userId){
-        return userService.updateUser(userId, userUpdateRequest);
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.updateUser(userId, userUpdateRequest))
+                .build();
     }
 
     @DeleteMapping("/{userId}")
-    String deleteUser(@PathVariable("userId") String userId){
+    ApiResponse<String> deleteUser(@PathVariable("userId") String userId){
         userService.deleteUser(userId);
-        return "User has been deleted!";
+        return ApiResponse.<String>builder()
+                .result("User has been deleted!")
+                .build();
     }
 }
