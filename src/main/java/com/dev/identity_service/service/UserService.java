@@ -61,6 +61,7 @@ public class UserService {
         return userMapper.toUserResponse(userReponsitory.save(user));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(String userId){
         userReponsitory.deleteById(userId);
     }
