@@ -4,6 +4,7 @@ import com.dev.identity_service.dto.request.AuthenticationRequest;
 import com.dev.identity_service.dto.request.IntrospectRequest;
 import com.dev.identity_service.dto.response.AuthenticationResponse;
 import com.dev.identity_service.dto.response.IntrospectResponse;
+import com.dev.identity_service.entity.User;
 import com.dev.identity_service.exception.AppException;
 import com.dev.identity_service.exception.ErrorCode;
 import com.dev.identity_service.repository.UserReponsitory;
@@ -21,11 +22,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.nimbusds.jose.*;
 import com.nimbusds.jwt.JWTClaimsSet;
+import org.springframework.util.CollectionUtils;
 
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.StringJoiner;
 
 @Service
 @RequiredArgsConstructor
@@ -63,21 +66,22 @@ public class AuthenticationService {
         }
         return AuthenticationResponse.builder()
                 .authenticated(authenticated)
-                .token(generateToken(request.getUsername()))
+                .token(generateToken(user))
                 .build();
     }
 
-    private String generateToken(String username){
+    private String generateToken(User user){
 
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(username)
+                .subject(user.getUserName())
                 .issuer("dev")
                 .issueTime(new Date())
                 .expirationTime(new Date(
                         Instant.now()
                                 .plus(1, ChronoUnit.HOURS)
                                 .toEpochMilli()))
+                .claim("scope", buildScope(user))
                 .build();
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
 
@@ -89,5 +93,13 @@ public class AuthenticationService {
             log.error("Cannot create token", e);
             throw new RuntimeException(e);
         }
+    }
+
+    private String buildScope(User user){
+        StringJoiner stringJoiner = new StringJoiner(" ");
+        if(!CollectionUtils.isEmpty(user.getRoles())){
+            user.getRoles().forEach(stringJoiner::add);
+        }
+        return stringJoiner.toString();
     }
 }
