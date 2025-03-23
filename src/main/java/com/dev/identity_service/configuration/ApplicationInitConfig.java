@@ -1,7 +1,9 @@
 package com.dev.identity_service.configuration;
 
+import com.dev.identity_service.entity.Role;
 import com.dev.identity_service.entity.User;
-import com.dev.identity_service.enums.Role;
+import com.dev.identity_service.repository.PermissionRepository;
+import com.dev.identity_service.repository.RoleRepository;
 import com.dev.identity_service.repository.UserReponsitory;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Configuration
@@ -23,15 +26,25 @@ public class ApplicationInitConfig {
     PasswordEncoder passwordEncoder;
 
     @Bean
-    ApplicationRunner applicationRunner(UserReponsitory userReponsitory){
+    ApplicationRunner applicationRunner(UserReponsitory userReponsitory, RoleRepository roleRepository,
+                                        PermissionRepository permissionRepository){
         return args -> {
-            if(userReponsitory.findByUserName("admin").isEmpty()){
-                User user = User.builder()
-                        .userName("admin")
-                        .password(passwordEncoder.encode("admin"))
-                        .roles(Set.of(Role.USER.name(), Role.ADMIN.name()))
+            if(roleRepository.findById("ADMIN").isEmpty()){
+                Role role = Role.builder()
+                        .name("ADMIN")
+                        .description("Admin role!")
+                        .permissions(new HashSet<>(permissionRepository.findAll()))
                         .build();
-                userReponsitory.save(user);
+                roleRepository.save(role);
+
+                if(userReponsitory.findByUserName("admin").isEmpty()){
+                    User user = User.builder()
+                            .userName("admin")
+                            .password(passwordEncoder.encode("admin"))
+                            .roles(Set.of(role))
+                            .build();
+                    userReponsitory.save(user);
+            }
                 log.warn("Admin user has been created with default password!");
             }
         };

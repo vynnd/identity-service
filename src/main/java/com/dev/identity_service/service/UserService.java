@@ -8,6 +8,7 @@ import com.dev.identity_service.enums.Role;
 import com.dev.identity_service.exception.AppException;
 import com.dev.identity_service.exception.ErrorCode;
 import com.dev.identity_service.mapper.UserMapper;
+import com.dev.identity_service.repository.RoleRepository;
 import com.dev.identity_service.repository.UserReponsitory;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import java.util.Set;
 public class UserService {
 
     UserReponsitory userReponsitory;
+    RoleRepository roleRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
 
@@ -38,7 +40,7 @@ public class UserService {
             throw new AppException(ErrorCode.USER_EXISTED);
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRoles(Set.of(Role.USER.name()));
+//        user.setRoles(Set.of(Role.USER.name()));
 
         return userMapper.toUserResponse(userReponsitory.save(user));
     }
@@ -58,6 +60,9 @@ public class UserService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         userMapper.updateUser(user, request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        var roles = roleRepository.findAllById(request.getRoles());
+        user.setRoles(new HashSet<>(roles));
+
         return userMapper.toUserResponse(userReponsitory.save(user));
     }
 

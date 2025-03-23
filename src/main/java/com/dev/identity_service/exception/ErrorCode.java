@@ -14,7 +14,8 @@ public enum ErrorCode {
     UN_AUTHENTICATED(4001, "Unauthenticated!", HttpStatus.UNAUTHORIZED),
     ACCESS_DENINED(4002, "You do not have permission!", HttpStatus.FORBIDDEN),
     PARSE_ERROR(5001, "Parse Exception!", HttpStatus.BAD_REQUEST),
-
+    DATABASE_ERROR(6001, "Database Exception!", HttpStatus.BAD_REQUEST),
+    ROLE_NOT_EXISTED(7001, "Role not existed!", HttpStatus.BAD_REQUEST)
     ;
 
     ErrorCode(int code, String message, HttpStatus httpStatus) {
