@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
     UNCATEGORIZED_EXCEPTION(9999, "System error!", HttpStatus.INTERNAL_SERVER_ERROR),
     INVALID_KEY(1001, "Invalid key (coding, refactor...)", HttpStatus.BAD_REQUEST),
+    INVALID_DOB(1002, "Invalid day of birth (> 18 years!)", HttpStatus.BAD_REQUEST),
     USER_EXISTED(2001, "User existed!", HttpStatus.BAD_REQUEST),
     USER_NOT_FOUND(2002, "User not found!", HttpStatus.NOT_FOUND),
     USER_NOT_EXISTED(2003, "User not existed!", HttpStatus.BAD_REQUEST),
