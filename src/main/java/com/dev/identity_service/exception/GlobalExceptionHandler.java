@@ -1,6 +1,7 @@
 package com.dev.identity_service.exception;
 
 import com.dev.identity_service.dto.response.ApiResponse;
+import jakarta.validation.ConstraintViolation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
@@ -10,10 +11,14 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.text.ParseException;
+import java.util.Map;
+import java.util.Objects;
 
 @ControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    private static final String MIN_ATTRIBUTES = "min";
 
     @ExceptionHandler(value = Exception.class)
     ResponseEntity<ApiResponse> handlingRuntimeException(RuntimeException exception){
@@ -39,16 +44,20 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiResponse> handlingValidation(MethodArgumentNotValidException exception){
         String enumKey = exception.getFieldError().getDefaultMessage();
         ErrorCode errorCode;
+        Map<String, Object> attributes = null;
         try {
             errorCode = ErrorCode.valueOf(enumKey);
+            var constrainViolation = exception.getBindingResult()
+                    .getAllErrors().getFirst().unwrap(ConstraintViolation.class);
+            attributes = constrainViolation.getConstraintDescriptor().getAttributes();
         }catch (IllegalArgumentException e){
             errorCode = ErrorCode.INVALID_KEY;
         }
 
         ApiResponse apiResponse = new ApiResponse();
         apiResponse.setCode(errorCode.getCode());
-        apiResponse.setMessage(errorCode.getMessage());
-
+        apiResponse.setMessage(!Objects.isNull(attributes) ? mapAttributes(errorCode.getMessage(), attributes)
+                : errorCode.getMessage());
         return ResponseEntity.status(errorCode.getHttpStatusCode()).body(apiResponse);
     }
 
@@ -79,5 +88,11 @@ public class GlobalExceptionHandler {
                         .code(errorCode.getCode())
                         .message(exception.getMessage())
                         .build());
+    }
+
+    private String mapAttributes(String message, Map<String, Object> atriibutes){
+
+        String minValue = String.valueOf(atriibutes.get(MIN_ATTRIBUTES));
+        return message.replace("{" + MIN_ATTRIBUTES + "}", minValue);
     }
 }
