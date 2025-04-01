@@ -13,6 +13,7 @@ public enum ErrorCode {
     USERNAME_INVALID(3003, "Username must be at least {min} characters!", HttpStatus.BAD_REQUEST),
     PASSWORD_INVALID(3004, "Password must be at least {min} characters!", HttpStatus.BAD_REQUEST),
     UN_AUTHENTICATED(4001, "Unauthenticated!", HttpStatus.UNAUTHORIZED),
+    TOKEN_LOGOUT(4002, "Token have been logged out!", HttpStatus.UNAUTHORIZED),
     ACCESS_DENINED(4002, "You do not have permission!", HttpStatus.FORBIDDEN),
     PARSE_ERROR(5001, "Parse Exception!", HttpStatus.BAD_REQUEST),
     DATABASE_ERROR(6001, "Database Exception!", HttpStatus.BAD_REQUEST),
