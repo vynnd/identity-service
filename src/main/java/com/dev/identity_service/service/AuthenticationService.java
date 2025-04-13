@@ -3,8 +3,10 @@ package com.dev.identity_service.service;
 import com.dev.identity_service.dto.request.AuthenticationRequest;
 import com.dev.identity_service.dto.request.IntrospectRequest;
 import com.dev.identity_service.dto.request.LogOutRequest;
+import com.dev.identity_service.dto.request.RefreshRequest;
 import com.dev.identity_service.dto.response.AuthenticationResponse;
 import com.dev.identity_service.dto.response.IntrospectResponse;
+import com.dev.identity_service.dto.response.RefreshResponse;
 import com.dev.identity_service.entity.InvalidatedToken;
 import com.dev.identity_service.entity.User;
 import com.dev.identity_service.exception.AppException;
@@ -86,6 +88,27 @@ public class AuthenticationService {
                 .expiryTime(expiryTime)
                 .build();
         invalidatedRepository.save(invalidatedToken);
+    }
+
+    public RefreshResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
+
+        var signedToken = verifyToken(request.getToken());
+        String jit = signedToken.getJWTClaimsSet().getJWTID();
+        Date expiryTime = signedToken.getJWTClaimsSet().getExpirationTime();
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jit)
+                .expiryTime(expiryTime)
+                .build();
+        invalidatedRepository.save(invalidatedToken);
+
+        var useName = signedToken.getJWTClaimsSet().getSubject();
+        var user = userReponsitory.findByUserName(useName)
+                .orElseThrow(() -> new AppException(ErrorCode.UN_AUTHENTICATED));
+
+        return RefreshResponse.builder()
+                .token(generateToken(user))
+                .authenticated(true)
+                .build();
     }
 
     private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
