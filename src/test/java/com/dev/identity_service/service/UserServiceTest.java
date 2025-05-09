@@ -12,9 +12,12 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDate;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
@@ -86,5 +89,27 @@ public class UserServiceTest {
         Assertions.assertThat(exception.getErrorCode().getCode()).isEqualTo(2001);
         Assertions.assertThat(exception.getMessage()).isEqualTo("User existed!");
 
+    }
+
+    @Test
+    @WithMockUser(username = "vy_test")
+    void getMyInfor_valid_success(){
+
+        Mockito.when(userReponsitory.findByUserName(Mockito.anyString())).thenReturn(Optional.of(user));
+        var response = userService.getMyInfor();
+        Assertions.assertThat(response.getUserName()).isEqualTo("vy_test");
+        Assertions.assertThat(response.getFirstName()).isEqualTo("test_01");
+        Assertions.assertThat(response.getLastName()).isEqualTo("test_02");
+    }
+
+    @Test
+    @WithMockUser(username = "vy_test")
+    void getMyInfor_userNotFound_error(){
+
+        Mockito.when(userReponsitory.findByUserName(Mockito.anyString())).thenReturn(Optional.ofNullable(null));
+        var response = assertThrows(AppException.class, () -> userService.getMyInfor());
+
+        Assertions.assertThat(response.getErrorCode().getCode()).isEqualTo(2003);
+        Assertions.assertThat(response.getErrorCode().getMessage()).isEqualTo("User not existed!");
     }
 }
